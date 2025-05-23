@@ -5,7 +5,11 @@ import zipfile
 import tempfile
 import traceback
 
-base_dir = r"C:\Users\Ervyn\Downloads\Testing"
+base_dir = r"C:\Users\Ervyn\Downloads\Processing"
+
+print(f"🔍 Scanning: {base_dir}")
+print("Contents:", os.listdir(base_dir))
+
 
 def convert_image_to_jpg(image_path):
     try:
@@ -112,12 +116,13 @@ def rename_zip_to_cbz(zip_path):
         print(f"❌ Error renaming {zip_path}: {e}")
 
 def main():
+    # Step 1–4: Process subdirectories
     for manga in os.listdir(base_dir):
         manga_path = os.path.join(base_dir, manga)
         if not os.path.isdir(manga_path):
             continue
 
-        # Step 1: Process chapter folders (convert to CBZ, convert first image if first chapter folder)
+        # Step 1: Process chapter folders
         chapter_folders = sorted([
             d for d in os.listdir(manga_path)
             if os.path.isdir(os.path.join(manga_path, d))
@@ -128,8 +133,7 @@ def main():
             is_first_chapter = (idx == 0)
             process_chapter_folder(chapter_path, is_first_chapter)
 
-        # Step 2: After all chapter folders are processed to CBZ,
-        # find all ZIP or CBZ files (some might still be ZIP)
+        # Step 2: Gather .zip and .cbz files
         archive_files = []
         for root, dirs, files in os.walk(manga_path):
             for f in files:
@@ -137,27 +141,60 @@ def main():
                     archive_files.append(os.path.join(root, f))
         archive_files.sort()
 
-        # Step 3: Fix first image inside the first archive (ZIP or CBZ)
+        # Step 3: Fix image in first archive
         if archive_files:
             first_archive = archive_files[0]
-
-            # If .cbz, treat as zip internally for processing
             temp_path = first_archive
             if first_archive.lower().endswith('.cbz'):
-                # Temporarily rename to .zip to work with zipfile module
                 temp_path = os.path.splitext(first_archive)[0] + '_temp.zip'
                 os.rename(first_archive, temp_path)
-
             fixed = fix_first_image_in_zip(temp_path)
-
-            # Rename back to .cbz if renamed before
             if first_archive.lower().endswith('.cbz'):
                 os.rename(temp_path, first_archive)
 
-        # Step 4: Rename all remaining .zip files to .cbz
+        # Step 4: Rename any .zip to .cbz
         for archive in archive_files:
             if archive.lower().endswith('.zip'):
                 rename_zip_to_cbz(archive)
+
+        # ✅ Step 5: Process .zip/.cbz files in base_dir itself
+    for filename in os.listdir(base_dir):
+        full_path = os.path.join(base_dir, filename)
+
+        if os.path.isfile(full_path) and filename.lower().endswith(('.zip', '.cbz')):
+            # Step 5.1: If .cbz, temporarily rename to .zip
+            was_cbz = filename.lower().endswith('.cbz')
+            temp_path = full_path
+            if was_cbz:
+                temp_path = os.path.splitext(full_path)[0] + '_temp.zip'
+                os.rename(full_path, temp_path)
+
+            # Step 5.2: Fix the first image
+            fixed = fix_first_image_in_zip(temp_path)
+
+            # Step 5.3: Rename back to .cbz if needed
+            if was_cbz:
+                os.rename(temp_path, full_path)
+
+            # Step 5.4: Rename any .zip to .cbz
+            elif filename.lower().endswith('.zip'):
+                new_path = os.path.splitext(full_path)[0] + '.cbz'
+                os.rename(full_path, new_path)
+                print(f"Renamed root zip: {filename} -> {os.path.basename(new_path)}")
+                full_path = new_path  # update for moving
+
+            # Step 5.5: Move the archive into its own folder as Chapter 1
+            base_name = os.path.splitext(os.path.basename(full_path))[0]
+            folder_path = os.path.join(base_dir, base_name)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
+            destination_path = os.path.join(folder_path, "Chapter 1.cbz")
+            shutil.move(full_path, destination_path)
+            print(f"Moved root cbz: {filename} -> {destination_path}")
+
+
+
+
 
 if __name__ == '__main__':
     main()
