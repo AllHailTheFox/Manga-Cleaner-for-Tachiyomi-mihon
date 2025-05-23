@@ -39,12 +39,11 @@ Each manga folder should contain chapter subfolders, with images inside each cha
 After running the script:
 - `Folder/`
   - `Manga1/`
-      - `Chapter 01.cbz`
-      - `Chapter 02.cbz`
+    - `Chapter 01.cbz`
+    - `Chapter 02.cbz`
   - `Manga2/`
-    - `Chapter 01/`
-      - `Chapter 01.cbz`
-      - `Chapter 02.cbz`
+    - `Chapter 01.cbz`
+    - `Chapter 02.cbz`
   - `Manga3/`
     - `Chapter 01.cbz`
 
