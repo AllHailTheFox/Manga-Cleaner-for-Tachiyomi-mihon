@@ -48,7 +48,9 @@ After running the script:
     - `Chapter 01.cbz`
 
 
-
+##How to use
+Replace base_dir = r"C:\Users\Bark\Downloads\Processing" with the folder containing all of your manga
+Run the script
 
 ## 🧰 Requirements
 
